@@ -1,6 +1,47 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
+# fail fast
+set -e
+
+logger -p user.notice -t "slugc[$$]" "language_pack_java java_compile_start"
+
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+# parse args
+BUILD_DIR=$1
+CACHE_DIR=$2
+LOGGER_FLAGS=""
+
+curl --silent --location http://heroku-jvm-common.s3.amazonaws.com/jvm-buildpack-common.tar.gz | tar xz
+. bin/java
+
+KEEP_M2_CACHE="true"
+
+if [ ! -d $CACHE_DIR ]; then
+KEEP_M2_CACHE="false"
+elif [ -f $CACHE_DIR/removeM2Cache ]; then
+KEEP_M2_CACHE="false"
+fi
+
+if [ "true" == $KEEP_M2_CACHE ]; then
+logger -p user.notice -t "slugc[$$]" "language_pack_java retain_m2_repo"
+fi
+
+#create the cache dir if it doesn't exist
+mkdir -p $CACHE_DIR
+
+# create default system.properties
+if [ ! -f ${BUILD_DIR}/system.properties ]; then
+echo "java.runtime.version=1.6" > ${BUILD_DIR}/system.properties
+fi
+
+# install JDK
+javaVersion=$(detect_java_version ${BUILD_DIR})
+echo -n "-----> Installing OpenJDK ${javaVersion}..."
+install_java ${BUILD_DIR} ${javaVersion}
+jdk_overlay ${BUILD_DIR}
+echo " done"
+
 # install JDK
 javaVersion=$(detect_java_version ${BUILD_DIR})
 echo -n "-----> Installing OpenJDK ${javaVersion}..."
