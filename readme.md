@@ -6,5 +6,4 @@ Use it if you need Heroku to execute a binary AND take the java.runtime.version 
 
 ## Usage
 
-$ heroku create --buildpack https://github.com/gregross/null-buildpack 
-
+$ heroku config:add BUILDPACK_URL=https://github.com/gregross/jdk-only-buildpack.git
